@@ -1,0 +1,546 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Counting Sort — Interactive Concept Lab</title>
+<style>
+/* ============================================================
+   DESIGN SYSTEM — shared across all Algorithms Lab pages
+   ============================================================ */
+:root{
+  --bg:#f7f7f5;
+  --surface:#ffffff;
+  --border:#e3e2de;
+  --text:#16181d;
+  --text-secondary:#5b6068;
+  --accent:#2951d1;
+  --accent-soft:#eaefff;
+  --accent-dark:#1c3aa0;
+  --success:#1f8a4c;
+  --success-soft:#e6f6ec;
+  --warning:#a8660b;
+  --warning-soft:#fff2e0;
+  --danger:#c53030;
+  --danger-soft:#fdecec;
+  --eliminated-bg:#e4e3de;
+  --eliminated-text:#9a978d;
+  --radius:10px;
+  --serif:Georgia,'Times New Roman',serif;
+  --sans:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;
+  --mono:'SFMono-Regular',Consolas,'Liberation Mono',Menlo,monospace;
+}
+*{box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+body{margin:0;background:var(--bg);color:var(--text);font-family:var(--sans);line-height:1.6;font-size:16px;}
+.wrap{max-width:880px;margin:0 auto;padding:0 24px;}
+a{color:var(--accent);}
+header.topbar{position:sticky;top:0;z-index:50;background:rgba(247,247,245,0.92);backdrop-filter:blur(6px);border-bottom:1px solid var(--border);}
+.topbar-inner{max-width:880px;margin:0 auto;padding:12px 24px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;}
+.brand{font-family:var(--serif);font-size:1.05rem;font-weight:700;color:var(--text);text-decoration:none;}
+.brand span{color:var(--accent);}
+nav.quicklinks{display:flex;gap:14px;flex-wrap:wrap;}
+nav.quicklinks a{font-size:0.82rem;color:var(--text-secondary);text-decoration:none;padding:4px 2px;border-bottom:2px solid transparent;}
+nav.quicklinks a:hover{color:var(--accent);border-bottom-color:var(--accent);}
+.hero{padding:44px 0 8px;}
+.eyebrow{font-size:0.78rem;letter-spacing:0.08em;text-transform:uppercase;color:var(--accent);font-weight:700;margin-bottom:10px;}
+h1{font-family:var(--serif);font-size:2.3rem;margin:0 0 10px;line-height:1.15;}
+.subtitle{color:var(--text-secondary);font-size:1.05rem;max-width:640px;}
+section{padding:38px 0;border-top:1px solid var(--border);}
+section:first-of-type{border-top:none;}
+h2{font-family:var(--serif);font-size:1.5rem;margin:0 0 14px;}
+h3{font-family:var(--serif);font-size:1.15rem;margin:22px 0 8px;}
+p{margin:0 0 14px;}
+.lead{font-size:1.05rem;color:var(--text-secondary);}
+.callout{background:var(--accent-soft);border-left:3px solid var(--accent);border-radius:6px;padding:16px 18px;margin:16px 0;}
+.callout.question{background:var(--warning-soft);border-left-color:var(--warning);}
+.callout p:last-child{margin-bottom:0;}
+button{font-family:var(--sans);font-size:0.88rem;font-weight:600;border-radius:7px;border:1px solid var(--border);background:var(--surface);color:var(--text);padding:9px 14px;cursor:pointer;transition:all .15s ease;}
+button:hover:not(:disabled){border-color:var(--accent);color:var(--accent-dark);}
+button:disabled{opacity:0.4;cursor:not-allowed;}
+button.primary{background:var(--accent);border-color:var(--accent);color:#fff;}
+button.primary:hover:not(:disabled){background:var(--accent-dark);color:#fff;}
+button.ghost{background:transparent;}
+.btn-row{display:flex;gap:8px;flex-wrap:wrap;align-items:center;}
+.sim-panel{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:22px;margin:18px 0;}
+.sim-controls-top{display:flex;gap:10px;flex-wrap:wrap;align-items:end;margin-bottom:18px;justify-content:space-between;}
+.field-group{display:flex;gap:10px;flex-wrap:wrap;align-items:end;}
+.field{display:flex;flex-direction:column;gap:4px;}
+.field label{font-size:0.75rem;color:var(--text-secondary);font-weight:600;}
+.field input[type=text]{font-family:var(--mono);font-size:0.9rem;padding:7px 9px;border:1px solid var(--border);border-radius:6px;width:260px;}
+
+.array-stage{overflow-x:auto;padding:6px 0;}
+.array-row{display:flex;gap:6px;min-width:max-content;padding-bottom:6px;}
+.row-label{font-size:0.72rem;color:var(--text-secondary);font-weight:700;text-transform:uppercase;letter-spacing:.03em;margin:12px 0 4px;}
+.cell{display:flex;flex-direction:column;align-items:center;gap:4px;min-width:40px;}
+.cell .box{width:40px;height:40px;border-radius:7px;border:1.5px solid var(--border);display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-weight:700;font-size:0.88rem;background:var(--surface);color:var(--text);transition:all .2s ease;}
+.cell .idx{font-size:0.62rem;color:var(--text-secondary);font-family:var(--mono);}
+.cell .tag{font-size:0.56rem;font-weight:700;text-transform:uppercase;height:11px;}
+.cell.empty .box{border-style:dashed;color:var(--text-secondary);background:transparent;}
+.cell.active-A .box{background:var(--accent-soft);border-color:var(--accent);color:var(--accent-dark);}
+.cell.active-A .tag{color:var(--accent-dark);}
+.cell.active-C .box{background:var(--warning-soft);border-color:var(--warning);color:var(--warning);}
+.cell.active-C .tag{color:var(--warning);}
+.cell.placed .box{background:var(--success-soft);border-color:var(--success);color:var(--success);}
+.cell.placed .tag{color:var(--success);}
+.cell.just-placed .box{background:var(--success);border-color:var(--success);color:#fff;}
+
+.legend{display:flex;gap:16px;flex-wrap:wrap;font-size:0.78rem;color:var(--text-secondary);margin-top:6px;margin-bottom:6px;}
+.legend .dot{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:5px;vertical-align:middle;}
+
+.state-readout{display:flex;gap:18px;flex-wrap:wrap;margin:14px 0;font-family:var(--mono);font-size:0.85rem;}
+.state-readout .kv{background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:6px 12px;}
+.state-readout .kv b{color:var(--accent-dark);}
+.message-box{background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:14px 16px;margin:14px 0;font-size:0.95rem;min-height:26px;}
+.message-box.done{background:var(--success-soft);border-color:var(--success);}
+.message-box.placing{background:var(--success-soft);border-color:var(--success);}
+.message-box.counting{background:var(--accent-soft);border-color:var(--accent);}
+.message-box.cumulative{background:var(--warning-soft);border-color:var(--warning);}
+.sim-controls-bottom{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:16px;}
+.step-counter{font-size:0.8rem;color:var(--text-secondary);margin-left:auto;font-family:var(--mono);}
+
+.mini-code{background:#1b1e24;color:#dfe3ea;border-radius:8px;padding:14px 16px;font-family:var(--mono);font-size:0.8rem;line-height:1.85;margin-top:16px;overflow-x:auto;}
+.mini-code .code-title{color:#8fa0c9;font-size:0.7rem;text-transform:uppercase;letter-spacing:.04em;margin-bottom:4px;}
+.mini-code .line{padding:1px 6px;border-radius:4px;white-space:pre;}
+.mini-code .line.hl{background:#3a3f2f;color:#ffe6a3;}
+.mini-code .ln{color:#6b7280;display:inline-block;width:18px;user-select:none;}
+
+table.map-table{width:100%;border-collapse:collapse;margin:14px 0;}
+table.map-table th,table.map-table td{text-align:left;padding:10px 12px;border-bottom:1px solid var(--border);font-size:0.92rem;}
+table.map-table th{color:var(--text-secondary);font-weight:600;font-size:0.78rem;text-transform:uppercase;letter-spacing:.03em;}
+.code-block{background:#1b1e24;color:#dfe3ea;border-radius:8px;padding:18px 20px;font-family:var(--mono);font-size:0.86rem;line-height:1.75;overflow-x:auto;margin:12px 0;}
+.code-block .cm{color:#7f8896;}
+.step-explain{border-left:3px solid var(--border);padding:6px 0 6px 14px;margin:10px 0;}
+.step-explain b{color:var(--accent-dark);}
+table.trace-table{width:100%;border-collapse:collapse;margin:14px 0;font-size:0.82rem;}
+table.trace-table th,table.trace-table td{border:1px solid var(--border);padding:6px 8px;text-align:center;font-family:var(--mono);}
+table.trace-table th{background:var(--bg);font-family:var(--sans);font-size:0.7rem;text-transform:uppercase;color:var(--text-secondary);}
+table.complexity-table{width:100%;border-collapse:collapse;margin:14px 0;}
+table.complexity-table th,table.complexity-table td{padding:10px 14px;border-bottom:1px solid var(--border);font-size:0.92rem;text-align:left;}
+table.complexity-table th{color:var(--text-secondary);font-weight:600;font-size:0.78rem;text-transform:uppercase;}
+table.complexity-table td.big{font-family:var(--mono);font-weight:700;color:var(--accent-dark);}
+.mistake-card{border:1px solid var(--border);border-radius:8px;padding:14px 16px;margin-bottom:12px;background:var(--surface);}
+.mistake-card h4{margin:0 0 6px;font-size:0.95rem;color:var(--danger);}
+.mistake-card p{margin:0;font-size:0.9rem;color:var(--text-secondary);}
+.recap-list{padding-left:0;list-style:none;margin:0;}
+.recap-list li{display:flex;gap:12px;padding:10px 0;border-bottom:1px solid var(--border);}
+.recap-list li:last-child{border-bottom:none;}
+.recap-num{flex:none;width:26px;height:26px;border-radius:50%;background:var(--accent);color:#fff;display:flex;align-items:center;justify-content:center;font-size:0.78rem;font-weight:700;}
+.source-note{font-size:0.78rem;color:var(--text-secondary);margin-top:6px;font-style:italic;}
+footer{padding:30px 0 60px;color:var(--text-secondary);font-size:0.82rem;}
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="topbar-inner">
+    <a class="brand" href="index.html">Algorithms <span>Lab</span></a>
+    <nav class="quicklinks">
+      <a href="#problem">Problem</a>
+      <a href="#simulate">Simulation</a>
+      <a href="#logic">Logic</a>
+      <a href="#pseudocode">Pseudocode</a>
+      <a href="#complexity">Complexity</a>
+      <a href="#recap">Recap</a>
+    </nav>
+  </div>
+</header>
+
+<div class="wrap">
+
+  <div class="hero">
+    <div class="eyebrow">Sorting · Non-Comparison / Linear</div>
+    <h1>Counting Sort</h1>
+    <p class="subtitle">Skip comparisons entirely — count how many times each value appears, then use those counts to place every element directly into its final position.</p>
+  </div>
+
+  <!-- ================= THE PROBLEM ================= -->
+  <section id="problem">
+    <h2>The Problem</h2>
+    <p class="lead">You need to sort <code>n</code> integers, and every one of them is known to lie in a small range <code>[0 .. r]</code>, where <code>r = O(n)</code>.</p>
+    <p>Every comparison-based sort (Selection, Merge, Quick, Heap Sort) is bound by <code>Ω(n log n)</code> in the worst case — that's a proven lower bound for any algorithm that only compares elements. But if you already know something extra about the data (like its range), you can sometimes do better by not comparing at all.</p>
+  </section>
+
+  <!-- ================= THINK ABOUT IT ================= -->
+  <section id="think">
+    <h2>Think About It</h2>
+    <div class="callout question">
+      <p><strong>Before reading further:</strong> if you knew there were exactly 2 zeros, 0 ones, and 2 twos in a list, could you figure out exactly which output positions the zeros belong in — without ever comparing them to anything else?</p>
+      <p>What if you kept a running tally, "how many elements are ≤ this value," for every possible value?</p>
+    </div>
+  </section>
+
+  <!-- ================= INTERACTIVE DEMONSTRATION ================= -->
+  <section id="simulate">
+    <h2>Interactive Demonstration</h2>
+    <p>Three passes: first <strong>count</strong> how many times each value appears, then turn those counts into <strong>cumulative sums</strong> (how many elements are ≤ each value), then use those sums to <strong>place</strong> each element of A — scanning from the end — directly into its final spot in B.</p>
+
+    <div class="sim-panel">
+      <div class="sim-controls-top">
+        <div class="field-group">
+          <div class="field">
+            <label for="arrayInput">Array A (integers in a small range, any order)</label>
+            <input type="text" id="arrayInput" value="2,5,3,0,2,3,0,3">
+          </div>
+        </div>
+        <div class="field-group">
+          <button id="btnApply" class="primary">Set Up Array</button>
+          <button id="btnRandom">Random Array</button>
+        </div>
+      </div>
+
+      <div class="row-label">A (input)</div>
+      <div class="array-stage"><div class="array-row" id="rowA"></div></div>
+
+      <div class="row-label">C (counts / cumulative sums)</div>
+      <div class="array-stage"><div class="array-row" id="rowC"></div></div>
+
+      <div class="row-label">B (output)</div>
+      <div class="array-stage"><div class="array-row" id="rowB"></div></div>
+
+      <div class="legend">
+        <span><span class="dot" style="background:var(--accent)"></span>A[j] currently being processed</span>
+        <span><span class="dot" style="background:var(--warning)"></span>C entry being updated</span>
+        <span><span class="dot" style="background:var(--success)"></span>placed in B</span>
+      </div>
+
+      <div class="state-readout" id="stateReadout"></div>
+      <div class="message-box" id="messageBox" aria-live="polite">Click "Set Up Array" to begin, then use Next Step.</div>
+
+      <div class="mini-code" id="miniCode">
+        <div class="code-title">COUNTING-SORT(A, B, n, r)</div>
+        <div class="line" data-line="2"><span class="ln">2</span>for i ← 0 to r:  C[i] ← 0</div>
+        <div class="line" data-line="4"><span class="ln">4</span>for j ← 1 to n:  C[A[j]] ← C[A[j]] + 1</div>
+        <div class="line" data-line="7"><span class="ln">7</span>for i ← 1 to r:  C[i] ← C[i] + C[i-1]</div>
+        <div class="line" data-line="10"><span class="ln">10</span>for j ← n downto 1:</div>
+        <div class="line" data-line="10b"><span class="ln"> </span>&nbsp;&nbsp;B[C[A[j]]] ← A[j]</div>
+        <div class="line" data-line="11"><span class="ln">11</span>&nbsp;&nbsp;C[A[j]] ← C[A[j]] − 1</div>
+      </div>
+
+      <div class="sim-controls-bottom">
+        <button id="btnReset">Reset</button>
+        <button id="btnPrev">◀ Previous Step</button>
+        <button id="btnNext" class="primary">Next Step ▶</button>
+        <button id="btnPlay">▶ Play</button>
+        <select id="speedSelect">
+          <option value="1100">Speed: Slow</option>
+          <option value="600" selected>Speed: Medium</option>
+          <option value="260">Speed: Fast</option>
+        </select>
+        <span class="step-counter" id="stepCounter"></span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= WHAT'S ACTUALLY HAPPENING ================= -->
+  <section id="mapping">
+    <h2>What's Actually Happening?</h2>
+    <table class="map-table">
+      <tr><th>What you saw</th><th>What the algorithm does</th></tr>
+      <tr><td>Tallied how many times each value appears</td><td><code>C[i]</code> accumulates a count for each value <code>i</code> by scanning A once</td></tr>
+      <tr><td>Turned tallies into "how many elements are ≤ this value"</td><td>Running sum across <code>C</code>: <code>C[i] ← C[i] + C[i-1]</code></td></tr>
+      <tr><td>That running total told you exactly where an element belongs</td><td><code>C[A[j]]</code> is now the correct final index for the last occurrence of value <code>A[j]</code></td></tr>
+      <tr><td>Placed one element, then updated the tally so the next matching value lands just before it</td><td><code>B[C[A[j]]] ← A[j]</code>, then <code>C[A[j]] ← C[A[j]] − 1</code></td></tr>
+      <tr><td>Went from the end of A backwards</td><td>Scanning <code>j</code> from <code>n downto 1</code> keeps the sort <strong>stable</strong> — equal elements keep their original relative order</td></tr>
+    </table>
+  </section>
+
+  <!-- ================= REAL COMPUTER LOGIC ================= -->
+  <section id="logic">
+    <h2>Now Let's See the Real Algorithm</h2>
+    <p><strong>Input:</strong> array <code>A[1..n]</code> of integers, each in <code>[0, r]</code> with <code>r = O(n)</code>.</p>
+    <p><strong>Output:</strong> array <code>B[1..n]</code>, the elements of A in sorted order. <strong>Auxiliary:</strong> array <code>C[0..r]</code> for counting.</p>
+    <h3>Core idea</h3>
+    <p>For each element <code>x</code>, determine the number of elements ≤ <code>x</code> — that number directly tells you <code>x</code>'s final position in the sorted output. No pairwise comparisons needed at all.</p>
+    <div class="step-explain"><b>Step 1.</b> Count occurrences: for each value <code>i</code>, count how many times it appears in A.</div>
+    <div class="step-explain"><b>Step 2.</b> Accumulate: turn those counts into cumulative sums, so <code>C[i]</code> now means "number of elements ≤ i."</div>
+    <div class="step-explain"><b>Step 3.</b> Place: scan A from the last element to the first; place each <code>A[j]</code> at position <code>C[A[j]]</code> in B, then decrement <code>C[A[j]]</code> so the next equal value lands one slot earlier.</div>
+  </section>
+
+  <!-- ================= PSEUDOCODE ================= -->
+  <section id="pseudocode">
+    <h2>Pseudocode</h2>
+    <div class="code-block">COUNTING-SORT(A, B, n, r)
+1.  for i ← 0 to r
+2.      do C[i] ← 0
+3.  for j ← 1 to n
+4.      do C[A[j]] ← C[A[j]] + 1
+5.  <span class="cm">▷ C[i] contains the number of elements equal to i</span>
+6.  for i ← 1 to r
+7.      do C[i] ← C[i] + C[i-1]
+8.  <span class="cm">▷ C[i] contains the number of elements ≤ i</span>
+9.  for j ← n downto 1
+10.     do B[C[A[j]]] ← A[j]
+11.         C[A[j]] ← C[A[j]] - 1</div>
+  </section>
+
+  <!-- ================= DRY RUN ================= -->
+  <section id="dryrun">
+    <h2>Dry Run</h2>
+    <p>The course's own worked example. <code>A = [2, 5, 3, 0, 2, 3, 0, 3]</code>, range <code>[0,5]</code>.</p>
+    <p><strong>Counts (frequencies):</strong> C = [2, 0, 2, 3, 0, 1] &nbsp;→&nbsp; <strong>Cumulative sums:</strong> C = [2, 2, 4, 7, 7, 8]</p>
+    <table class="trace-table">
+      <tr><th>j</th><th>A[j]</th><th>Place at B[C[A[j]]]</th><th>B after this step</th></tr>
+      <tr><td>8</td><td>3</td><td>B[7] = 3</td><td>_,_,_,_,_,_,3,_</td></tr>
+      <tr><td>7</td><td>0</td><td>B[2] = 0</td><td>_,0,_,_,_,_,3,_</td></tr>
+      <tr><td>6</td><td>3</td><td>B[6] = 3</td><td>_,0,_,_,_,3,3,_</td></tr>
+      <tr><td>5</td><td>2</td><td>B[4] = 2</td><td>_,0,_,2,_,3,3,_</td></tr>
+      <tr><td>4</td><td>0</td><td>B[1] = 0</td><td>0,0,_,2,_,3,3,_</td></tr>
+      <tr><td>3</td><td>3</td><td>B[5] = 3</td><td>0,0,_,2,3,3,3,_</td></tr>
+      <tr><td>2</td><td>5</td><td>B[8] = 5</td><td>0,0,_,2,3,3,3,5</td></tr>
+      <tr><td>1</td><td>2</td><td>B[3] = 2</td><td><strong>0,0,2,2,3,3,3,5</strong></td></tr>
+    </table>
+    <p class="source-note">This is the simulator's default array above — every B/C state here was independently verified against the course's own diagrams, step for step.</p>
+  </section>
+
+  <!-- ================= COMPLEXITY ================= -->
+  <section id="complexity">
+    <h2>How Efficient Is It?</h2>
+    <table class="complexity-table">
+      <tr><th>Case</th><th>Time Complexity</th><th>Why</th></tr>
+      <tr><td>Best / Average / Worst</td><td class="big">Θ(n + r)</td><td>Every phase is a single linear pass — over A (size n) or over C (size r+1) — with no data-dependent branching cost.</td></tr>
+    </table>
+    <p>In practice, Counting Sort is used exactly when <code>r = O(n)</code>, which makes the running time <strong>Θ(n)</strong> — genuinely linear, beating the <code>Ω(n log n)</code> lower bound that applies to any comparison-based sort (which this isn't).</p>
+    <p><strong>Space complexity:</strong> O(n + r) — the counting array C and the output array B are both extra space; Counting Sort is <strong>not</strong> an in-place sort.</p>
+    <p><strong>Stability:</strong> Counting Sort is stable — scanning A from <code>n downto 1</code> in the placement step ensures that when two elements have equal value, the one that appeared earlier in A also appears earlier in B.</p>
+  </section>
+
+  <!-- ================= WHEN TO USE IT ================= -->
+  <section id="when">
+    <h2>When Would We Use It?</h2>
+    <ul>
+      <li>When elements are integers (or map cleanly to integers) within a range that's not much bigger than <code>n</code> — e.g. exam scores 0–100, ages, small counts.</li>
+      <li>When you need a <strong>stable</strong> sort, especially as a subroutine — Radix Sort relies on exactly this property.</li>
+      <li><strong>Avoid</strong> it when the range <code>r</code> is much larger than <code>n</code> (e.g. sorting 100 arbitrary 64-bit integers) — the <code>Θ(r)</code> term would dominate and make it slower than a comparison sort.</li>
+    </ul>
+  </section>
+
+  <!-- ================= COMMON MISTAKES ================= -->
+  <section id="mistakes">
+    <h2>Common Mistakes</h2>
+    <div class="mistake-card">
+      <h4>Using it outside its assumptions</h4>
+      <p>Counting Sort only works on non-negative integers in a known, bounded range. It can't directly sort floats, strings, or arbitrary-range integers.</p>
+    </div>
+    <div class="mistake-card">
+      <h4>Scanning A forwards in the placement step</h4>
+      <p>Placing elements in the order <code>j ← 1 to n</code> instead of <code>n downto 1</code> still produces a sorted array, but breaks <strong>stability</strong> — equal elements would end up reversed relative to their original order.</p>
+    </div>
+    <div class="mistake-card">
+      <h4>Forgetting to decrement C[A[j]] after placing</h4>
+      <p>Without the decrement, every occurrence of a repeated value would try to write to the exact same position in B, overwriting earlier placements.</p>
+    </div>
+    <div class="mistake-card">
+      <h4>Confusing the two roles of C</h4>
+      <p>C starts as a simple frequency count, then is <em>overwritten in place</em> to become cumulative sums — it's easy to forget these are two different meanings of the same array at two different points in the algorithm.</p>
+    </div>
+  </section>
+
+  <!-- ================= QUICK RECAP ================= -->
+  <section id="recap">
+    <h2>Remember</h2>
+    <ul class="recap-list">
+      <li><span class="recap-num">1</span><span><strong>Problem:</strong> sort n integers known to lie in a small range [0, r].</span></li>
+      <li><span class="recap-num">2</span><span><strong>Core idea:</strong> count occurrences, turn counts into cumulative "how many ≤ this value," then place directly.</span></li>
+      <li><span class="recap-num">3</span><span><strong>Steps:</strong> count → accumulate → place (scanning A backwards for stability).</span></li>
+      <li><span class="recap-num">4</span><span><strong>Requirement:</strong> integer keys in a known range with r = O(n).</span></li>
+      <li><span class="recap-num">5</span><span><strong>Complexity:</strong> Θ(n + r) time — Θ(n) when r = O(n); Θ(n + r) space; stable, not in-place.</span></li>
+    </ul>
+  </section>
+
+  <footer>
+    Source: Course Lecture 4 (Linear Sorting — Counting Sort). Built for the Algorithms interactive concept-lab series.
+  </footer>
+
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  let steps = [];
+  let stepIdx = 0;
+  let playTimer = null;
+
+  const rowA = document.getElementById('rowA');
+  const rowC = document.getElementById('rowC');
+  const rowB = document.getElementById('rowB');
+  const stateReadout = document.getElementById('stateReadout');
+  const messageBox = document.getElementById('messageBox');
+  const stepCounter = document.getElementById('stepCounter');
+  const miniCode = document.getElementById('miniCode');
+
+  const btnApply = document.getElementById('btnApply');
+  const btnRandom = document.getElementById('btnRandom');
+  const btnReset = document.getElementById('btnReset');
+  const btnPrev = document.getElementById('btnPrev');
+  const btnNext = document.getElementById('btnNext');
+  const btnPlay = document.getElementById('btnPlay');
+  const speedSelect = document.getElementById('speedSelect');
+  const arrayInput = document.getElementById('arrayInput');
+
+  function parseArray(raw){
+    return raw.split(',').map(s=>parseInt(s.trim(),10)).filter(x=>!isNaN(x) && x>=0);
+  }
+
+  function computeSteps(inputArr){
+    const n = inputArr.length;
+    const a = [null, ...inputArr];
+    const r = Math.max(...inputArr);
+    const C = new Array(r+1).fill(0);
+    const B = new Array(n+1).fill(null);
+    const out = [];
+
+    function push(obj){
+      out.push(Object.assign({ a:a.slice(), C:C.slice(), B:B.slice(), n, r }, obj));
+    }
+
+    push({type:'init', phase:'count', line:'2', message:`Initialize C[0..${r}] to all zeros.`});
+
+    for(let j=1;j<=n;j++){
+      C[a[j]]++;
+      push({type:'count', phase:'count', line:'4', j, aj:a[j],
+        message:`C[A[${j}]] = C[${a[j]}] += 1 → C[${a[j]}] is now ${C[a[j]]}.`});
+    }
+    push({type:'count-done', phase:'count', line:null,
+      message:`Counting complete: C = [${C.join(', ')}] — these are frequencies (how many elements equal each value).`});
+
+    for(let i=1;i<=r;i++){
+      C[i] += C[i-1];
+      push({type:'cumulative', phase:'cumsum', line:'7', ci:i,
+        message:`C[${i}] += C[${i-1}] → C[${i}] is now ${C[i]}.`});
+    }
+    push({type:'cumsum-done', phase:'cumsum', line:null,
+      message:`Cumulative sums complete: C = [${C.join(', ')}] — now C[i] means "number of elements ≤ i".`});
+
+    for(let j=n;j>=1;j--){
+      const val = a[j];
+      const pos = C[val];
+      B[pos] = val;
+      push({type:'place', phase:'place', line:'10b', j, aj:val, pos,
+        message:`B[C[A[${j}]]] = B[${pos}] ← A[${j}] = ${val}.`});
+      C[val]--;
+      push({type:'decrement', phase:'place', line:'11', j, aj:val, pos,
+        message:`C[${val}] -= 1 → C[${val}] is now ${C[val]} (so the next ${val}, if any, lands one slot earlier).`});
+    }
+    push({type:'done', phase:'done', line:null,
+      message:`Done! Sorted output: B = [${B.slice(1).join(', ')}].`});
+
+    return out;
+  }
+
+  function setup(){
+    let arr = parseArray(arrayInput.value);
+    if(arr.length===0) arr=[2,5,3,0,2,3,0,3];
+    if(arr.length>12) arr = arr.slice(0,12);
+    arrayInput.value = arr.join(',');
+    steps = computeSteps(arr);
+    stepIdx = 0;
+    render();
+  }
+
+  function randomArray(){
+    const n = 7+Math.floor(Math.random()*5);
+    const maxVal = 5+Math.floor(Math.random()*3); // keep r small-ish, r=O(n)
+    const a=[];
+    for(let k=0;k<n;k++) a.push(Math.floor(Math.random()*(maxVal+1)));
+    arrayInput.value = a.join(',');
+    steps = computeSteps(a);
+    stepIdx = 0;
+    render();
+  }
+
+  function renderRow(container, arr, startIdx, cellClassFn, tagFn){
+    container.innerHTML = '';
+    for(let i=startIdx;i<arr.length;i++){
+      const val = arr[i];
+      const div = document.createElement('div');
+      const extraCls = cellClassFn(i,val);
+      div.className = 'cell' + (extraCls?(' '+extraCls):'') + (val===null?' empty':'');
+      const tag = tagFn ? tagFn(i,val) : '';
+      div.innerHTML = `<div class="tag">${tag}</div><div class="box">${val===null?'·':val}</div><div class="idx">${i}</div>`;
+      container.appendChild(div);
+    }
+  }
+
+  function render(){
+    const step = steps[stepIdx] || steps[0];
+
+    renderRow(rowA, step.a, 1,
+      (i)=> (step.j===i) ? 'active-A' : '',
+      (i)=> (step.j===i) ? 'j' : '');
+
+    renderRow(rowC, step.C, 0,
+      (i,val)=>{
+        if((step.type==='count') && i===step.aj) return 'active-C';
+        if((step.type==='cumulative') && i===step.ci) return 'active-C';
+        if((step.type==='decrement') && i===step.aj) return 'active-C';
+        return '';
+      },
+      (i)=>{
+        if((step.type==='count'||step.type==='decrement') && i===step.aj) return 'C[v]';
+        if(step.type==='cumulative' && i===step.ci) return 'C[i]';
+        return '';
+      });
+
+    renderRow(rowB, step.B, 1,
+      (i)=>{
+        if(step.type==='place' && i===step.pos) return 'just-placed';
+        if(step.B[i]!==null) return 'placed';
+        return '';
+      },
+      (i)=> (step.type==='place' && i===step.pos) ? 'new!' : '');
+
+    stateReadout.innerHTML = `
+      <div class="kv">phase = <b>${step.phase}</b></div>
+      ${step.j!==undefined ? `<div class="kv">j = <b>${step.j}</b></div>` : ''}
+      ${step.aj!==undefined ? `<div class="kv">A[j] = <b>${step.aj}</b></div>` : ''}
+    `;
+
+    messageBox.textContent = step.message;
+    messageBox.classList.remove('done','placing','counting','cumulative');
+    if(step.type==='done') messageBox.classList.add('done');
+    else if(step.phase==='place') messageBox.classList.add('placing');
+    else if(step.phase==='count') messageBox.classList.add('counting');
+    else if(step.phase==='cumsum') messageBox.classList.add('cumulative');
+
+    Array.from(miniCode.querySelectorAll('.line')).forEach(l=>{
+      l.classList.toggle('hl', step.line !== null && l.dataset.line === step.line);
+    });
+
+    stepCounter.textContent = `Step ${stepIdx+1} of ${steps.length}`;
+    btnPrev.disabled = stepIdx === 0;
+    const atEnd = stepIdx === steps.length-1;
+    btnNext.disabled = atEnd;
+    if(atEnd) stopPlay();
+  }
+
+  function next(){ if(stepIdx<steps.length-1){ stepIdx++; render(); } else stopPlay(); }
+  function prev(){ if(stepIdx>0){ stepIdx--; render(); } }
+  function reset(){ stopPlay(); stepIdx=0; render(); }
+  function togglePlay(){
+    if(playTimer){ stopPlay(); return; }
+    btnPlay.textContent = '⏸ Pause';
+    playTimer = setInterval(()=>{
+      if(stepIdx>=steps.length-1){ stopPlay(); return; }
+      next();
+    }, parseInt(speedSelect.value,10));
+  }
+  function stopPlay(){
+    if(playTimer){ clearInterval(playTimer); playTimer=null; }
+    btnPlay.textContent = '▶ Play';
+  }
+
+  btnApply.addEventListener('click', setup);
+  btnRandom.addEventListener('click', randomArray);
+  btnReset.addEventListener('click', reset);
+  btnNext.addEventListener('click', ()=>{ stopPlay(); next(); });
+  btnPrev.addEventListener('click', ()=>{ stopPlay(); prev(); });
+  btnPlay.addEventListener('click', togglePlay);
+
+  setup();
+})();
+</script>
+
+</body>
+</html>
